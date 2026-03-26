@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物病虫害识别</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .api-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .api-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .api-section input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .upload-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background-color: #e8f5e8;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .image-preview .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-preview .remove-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .image-preview .preview-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            text-align: center;
+            font-size: 10px;
+            padding: 2px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .result-section h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        #resultText {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .hint {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .upload-area {
+                padding: 30px 15px;
+            }
+            
+            .image-preview {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>植物病虫害识别</h1>
+        
+        <div class="api-section">
+            <label for="apiKeyInput">API Key:</label>
+            <input type="text" id="apiKeyInput" value="2b10imYwpIAGLH8BX6esVUVBee">
+        </div>
+        
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <p>点击上传或拖拽图片到此处</p>
+                <p>支持最多3张照片</p>
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">上传或拍照</button>
+                <input type="file" id="fileInput" accept="image/*" multiple>
+            </div>
+            
+            <div class="image-preview-container" id="imagePreviewContainer">
+            </div>
+            
+            <div class="hint">已选择 <span id="imageCount">0</span> 张图片</div>
+            
+            <button class="btn btn-primary" onclick="identifyPlantDisease()" style="margin-top: 20px;">识别</button>
+            
+            <div class="loading" id="loading"></div>
+            <div class="error" id="error"></div>
+        </div>
+        
+        <div class="result-section">
+            <h2>识别结果</h2>
+            <textarea id="resultText" readonly placeholder="识别结果将显示在这里..."></textarea>
+        </div>
+    </div>
+    
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const imageCountSpan = document.getElementById('imageCount');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const resultText = document.getElementById('resultText');
+        
+        let selectedFiles = [];
+        const MAX_IMAGES = 3;
+        
+        // 拖拽功能
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+        
+        // 文件选择
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
+            }
+        });
+        
+        // 处理文件
+        function handleFiles(files) {
+            error.textContent = '';
+            
+            const newFiles = Array.from(files).filter(file => {
+                if (!file.type.startsWith('image/')) {
+                    error.textContent = '请只上传图片文件';
+                    return false;
+                }
+                if (file.size > 4 * 1024 * 1024) {
+                    error.textContent = '单张图片大小不能超过4M';
+                    return false;
+                }
+                return true;
+            });
+            
+            if (selectedFiles.length + newFiles.length > MAX_IMAGES) {
+                error.textContent = `最多只能上传 ${MAX_IMAGES} 张图片`;
+                return;
+            }
+            
+            selectedFiles = [...selectedFiles, ...newFiles];
+            updatePreview();
+        }
+        
+        // 更新预览
+        function updatePreview() {
+            imagePreviewContainer.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const div = document.createElement('div');
+                div.className = 'image-preview';
+                
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.alt = '预览图片';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = () => removeImage(index);
+                
+                const label = document.createElement('div');
+                label.className = 'preview-label';
+                label.textContent = `图片 ${index + 1}`;
+                
+                div.appendChild(img);
+                div.appendChild(removeBtn);
+                div.appendChild(label);
+                imagePreviewContainer.appendChild(div);
+            });
+            
+            imageCountSpan.textContent = selectedFiles.length;
+        }
+        
+        // 移除图片
+        function removeImage(index) {
+            selectedFiles.splice(index, 1);
+            updatePreview();
+        }
+        
+        // 拍照功能
+        uploadArea.addEventListener('click', (e) => {
+            if (e.target === uploadArea || e.target.tagName === 'P' || e.target.tagName === 'BUTTON') {
+                if (selectedFiles.length >= MAX_IMAGES) {
+                    error.textContent = `最多只能上传 ${MAX_IMAGES} 张图片`;
+                    return;
+                }
+                
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    error.textContent = '您的设备不支持拍照功能';
+                    return;
+                }
+                
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        const video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.play();
+                        
+                        const modal = document.createElement('div');
+                        modal.style.position = 'fixed';
+                        modal.style.top = '0';
+                        modal.style.left = '0';
+                        modal.style.width = '100%';
+                        modal.style.height = '100%';
+                        modal.style.backgroundColor = 'rgba(0,0,0,0.9)';
+                        modal.style.display = 'flex';
+                        modal.style.flexDirection = 'column';
+                        modal.style.justifyContent = 'center';
+                        modal.style.alignItems = 'center';
+                        modal.style.zIndex = '1000';
+                        
+                        const videoContainer = document.createElement('div');
+                        videoContainer.style.position = 'relative';
+                        
+                        video.style.maxWidth = '90%';
+                        video.style.maxHeight = '70vh';
+                        
+                        const captureBtn = document.createElement('button');
+                        captureBtn.textContent = '拍照';
+                        captureBtn.style.marginTop = '20px';
+                        captureBtn.style.padding = '10px 30px';
+                        captureBtn.style.fontSize = '16px';
+                        captureBtn.style.backgroundColor = '#3498db';
+                        captureBtn.style.color = 'white';
+                        captureBtn.style.border = 'none';
+                        captureBtn.style.borderRadius = '4px';
+                        captureBtn.style.cursor = 'pointer';
+                        
+                        const cancelBtn = document.createElement('button');
+                        cancelBtn.textContent = '取消';
+                        cancelBtn.style.marginTop = '10px';
+                        cancelBtn.style.padding = '10px 30px';
+                        cancelBtn.style.fontSize = '16px';
+                        cancelBtn.style.backgroundColor = '#95a5a6';
+                        cancelBtn.style.color = 'white';
+                        cancelBtn.style.border = 'none';
+                        cancelBtn.style.borderRadius = '4px';
+                        cancelBtn.style.cursor = 'pointer';
+                        
+                        captureBtn.addEventListener('click', () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            
+                            stream.getTracks().forEach(track => track.stop());
+                            
+                            canvas.toBlob((blob) => {
+                                const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
+                                if (selectedFiles.length < MAX_IMAGES) {
+                                    selectedFiles.push(file);
+                                    updatePreview();
+                                }
+                                document.body.removeChild(modal);
+                            }, 'image/jpeg', 0.8);
+                        });
+                        
+                        cancelBtn.addEventListener('click', () => {
+                            stream.getTracks().forEach(track => track.stop());
+                            document.body.removeChild(modal);
+                        });
+                        
+                        videoContainer.appendChild(video);
+                        modal.appendChild(videoContainer);
+                        modal.appendChild(captureBtn);
+                        modal.appendChild(cancelBtn);
+                        document.body.appendChild(modal);
+                    })
+                    .catch(err => {
+                        error.textContent = '无法访问相机: ' + err.message;
+                    });
+            }
+        });
+        
+        // 识别植物病虫害
+        async function identifyPlantDisease() {
+            if (selectedFiles.length === 0) {
+                error.textContent = '请先上传图片';
+                return;
+            }
+            
+            loading.style.display = 'block';
+            error.textContent = '';
+            resultText.value = '正在识别...';
+            
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            const apiUrl = 'https://my-api.plantnet.org/v2/diseases/identify?api-key=' + apiKey + '&include-related-images=true';
+            
+            try {
+                const form = new FormData();
+                selectedFiles.forEach(file => {
+                    form.append('images', file);
+                });
+                
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: form
+                });
+                
+                const text = await res.text();
+                
+                if (!res.ok) {
+                    throw new Error('API调用失败: ' + res.status + ' - ' + text);
+                }
+                
+                const data = JSON.parse(text);
+                
+                loading.style.display = 'none';
+                
+                if (data.results && data.results.length > 0) {
+                    const topResult = data.results[0];
+                    const species = topResult.species;
+                    const confidence = (topResult.score * 100).toFixed(1) + '%';
+                    
+                    resultText.value = '植物名称: ' + species.scientificName + '\n' +
+                                      '常见名称: ' + (species.commonNames ? species.commonNames.join(', ') : '未知') + '\n' +
+                                      '置信度: ' + confidence + '\n\n' +
+                                      '识别结果: 该植物可能患有病害\n\n' +
+                                      '建议: 请咨询专业植物医生进行进一步诊断和治疗';
+                } else {
+                    error.textContent = '识别失败: 未找到匹配结果';
+                    resultText.value = '';
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                error.textContent = 'API调用失败: ' + err.message;
+                resultText.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
