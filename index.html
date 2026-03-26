@@ -468,28 +468,39 @@
             resultText.value = '正在识别...';
             
             const apiKey = document.getElementById('apiKeyInput').value.trim();
-            const apiUrl = 'https://my-api.plantnet.org/v2/diseases/identify?api-key=' + apiKey + '&include-related-images=true';
             
             try {
-                const form = new FormData();
-                selectedFiles.forEach(file => {
-                    form.append('images', file);
+                const imageFiles = selectedFiles.map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const base64 = e.target.result.split(',')[1];
+                            resolve({
+                                data: base64,
+                                type: file.type
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    });
                 });
                 
-                const res = await fetch(apiUrl, {
+                const images = await Promise.all(imageFiles);
+                
+                const response = await fetch('/api/identify?api_key=' + apiKey, {
                     method: 'POST',
-                    body: form
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ images: images })
                 });
                 
-                const text = await res.text();
-                
-                if (!res.ok) {
-                    throw new Error('API调用失败: ' + res.status + ' - ' + text);
-                }
-                
-                const data = JSON.parse(text);
+                const data = await response.json();
                 
                 loading.style.display = 'none';
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'API调用失败');
+                }
                 
                 if (data.results && data.results.length > 0) {
                     const topResult = data.results[0];
