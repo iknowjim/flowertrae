@@ -76,45 +76,14 @@
             background-color: #e8f5e8;
         }
         
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        
-        .btn-secondary {
-            background-color: #95a5a6;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #7f8c8d;
-        }
-        
-        #fileInput {
-            display: none;
-        }
-        
         .image-preview-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
             justify-content: center;
-            margin: 20px 0;
+            margin: 20px auto;
+            max-width: 600px;
+            padding: 10px;
         }
         
         .image-preview {
@@ -123,7 +92,7 @@
             object-fit: cover;
             border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            position: relative;
+            flex-shrink: 0;
         }
         
         .image-preview .remove-btn {
@@ -157,6 +126,30 @@
             text-align: center;
             font-size: 10px;
             padding: 2px;
+        }
+        
+        .btn-identify {
+            display: inline-block;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 20px auto;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        #fileInput {
+            display: none;
         }
         
         .loading {
@@ -256,7 +249,7 @@
             
             <div class="hint">已选择 <span id="imageCount">0</span> 张图片</div>
             
-            <button class="btn btn-primary" onclick="identifyPlantDisease()" style="margin-top: 20px;">识别</button>
+            <button class="btn-identify btn-primary" onclick="identifyPlantDisease()">识别</button>
             
             <div class="loading" id="loading"></div>
             <div class="error" id="error"></div>
