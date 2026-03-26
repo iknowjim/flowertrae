@@ -510,18 +510,4 @@
                     resultText.value = '植物名称: ' + species.scientificName + '\n' +
                                       '常见名称: ' + (species.commonNames ? species.commonNames.join(', ') : '未知') + '\n' +
                                       '置信度: ' + confidence + '\n\n' +
-                                      '识别结果: 该植物可能患有病害\n\n' +
-                                      '建议: 请咨询专业植物医生进行进一步诊断和治疗';
-                } else {
-                    error.textContent = '识别失败: 未找到匹配结果';
-                    resultText.value = '';
-                }
-            } catch (err) {
-                loading.style.display = 'none';
-                error.textContent = 'API调用失败: ' + err.message;
-                resultText.value = '';
-            }
-        }
-    </script>
-</body>
-</html>
+                          
